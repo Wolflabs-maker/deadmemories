@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOLFFY | Dead Memories - Slipknot (B2)</title>
+    <!-- Tailwind CSS with Spotify Palette Configured -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'spotify-green': '#1DB954',
+                        'spotify-green-hover': '#1ed760',
+                        'spotify-black': '#121212',
+                        'spotify-base': '#000000',
+                        'spotify-surface': '#181818',
+                        'spotify-surface-hover': '#282828',
+                        'spotify-text-base': '#a7a7a7',
+                        'spotify-text-highlight': '#ffffff',
+                        'lyric-bg': '#0f0f11', /* Very dark/almost black for Slipknot */
+                        'slipknot-red': '#8b0000', /* Dark crimson for accents */
+                        'slipknot-red-hover': '#a50000'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-green-hover: #1ed760;
+            --spotify-black: #121212;
+            --spotify-base: #000000;
+            --spotify-surface: #181818;
+            --spotify-surface-hover: #282828;
+            --spotify-text-base: #a7a7a7;
+            --spotify-text-highlight: #ffffff;
+            --lyric-bg: #0f0f11; 
+            --slipknot-red: #8b0000;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--spotify-base);
+            color: var(--spotify-text-base);
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main Structure */
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(100vh - 90px);
+        }
+
+        .sidebar {
+            width: 240px;
+            background-color: var(--spotify-base);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 12px;
+            flex-shrink: 0;
+        }
+
+        .main-view {
+            flex: 1;
+            /* Gradient inspired by dark heavy metal / grunge aesthetics */
+            background: linear-gradient(180deg, #1c1919 0%, var(--spotify-black) 100%);
+            border-radius: 12px;
+            margin: 8px 8px 0 0;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .player-bar {
+            height: 90px;
+            background-color: var(--spotify-surface);
+            border-top: 1px solid #282828;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 50;
+        }
+        
+        /* Navigation */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            color: var(--spotify-text-base);
+            font-weight: 700;
+            font-size: 14px;
+            transition: color 0.2s;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .nav-item:hover { color: var(--spotify-text-highlight); }
+        .nav-item.active { color: var(--spotify-text-highlight); background-color: var(--spotify-surface-hover); border-left: 3px solid var(--slipknot-red); }
+
+        /* Buttons */
+        .play-btn-large {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--spotify-green);
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(29, 185, 84, 0.3);
+        }
+        .play-btn-large:hover { background-color: var(--spotify-green-hover); transform: scale(1.08); box-shadow: 0 12px 20px rgba(29, 185, 84, 0.5); }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--spotify-text-highlight);
+            border: 1px solid #727272;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 500px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--spotify-text-highlight); transform: scale(1.04); }
+
+        /* Glowing Confirm Button */
+        .btn-confirm-glow {
+            background-color: var(--slipknot-red);
+            color: white;
+            font-weight: 900;
+            padding: 16px 40px;
+            border-radius: 500px;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 2px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.4);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-confirm-glow:hover {
+            background-color: #a50000;
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 0, 0, 0.6);
+        }
+        .btn-confirm-glow:disabled {
+            background-color: #333;
+            color: #666;
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+        }
+        
+        @keyframes pulse-red-glow {
+            0% { box-shadow: 0 0 10px rgba(139, 0, 0, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(139, 0, 0, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(139, 0, 0, 0.4); }
+        }
+        .animate-pulse-red-glow { animation: pulse-red-glow 2s infinite ease-in-out; }
+
+        /* Absolute Success Class (Adapted to Spotify Green for success state) */
+        .bg-success-glow {
+            background-color: var(--spotify-green) !important;
+            color: black !important;
+            border-color: var(--spotify-green) !important;
+            box-shadow: 0 0 30px rgba(29, 185, 84, 0.8) !important;
+            transition: all 0.3s ease !important;
+        }
+        .bg-success-glow p, .bg-success-glow span, .bg-success-glow div, .bg-success-glow i, .bg-success-glow h3 { 
+            color: black !important; 
+            text-shadow: none !important;
+        }
+
+        /* Error Class */
+        .bg-error-glow {
+            background-color: var(--slipknot-red) !important;
+            color: white !important;
+            border-color: var(--slipknot-red) !important;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.8) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        /* Lyric Visuals */
+        .lyric-line {
+            font-size: 2.5rem;
+            font-weight: 900;
+            line-height: 1.3;
+            letter-spacing: -0.02em;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        @media (max-width: 768px) { .lyric-line { font-size: 1.8rem; } }
+        
+        .lyric-inactive { color: rgba(255, 255, 255, 0.2); }
+        .lyric-active { color: var(--spotify-text-highlight); text-shadow: 0 4px 20px rgba(139,0,0,0.5); }
+        
+        .lyric-blank {
+            display: inline-block;
+            min-width: 140px;
+            border-bottom: 4px solid var(--slipknot-red);
+            color: var(--slipknot-red);
+            text-align: center;
+            padding: 0 10px;
+            margin: 0 5px;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+        .lyric-blank.filled {
+            border-bottom-color: var(--slipknot-red);
+            text-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
+            color: white;
+        }
+
+        .option-pill {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        .option-pill:hover {
+            background: rgba(139,0,0,0.2);
+            border-color: var(--slipknot-red);
+            transform: translateY(-2px);
+        }
+        .option-pill.selected {
+            background: var(--slipknot-red);
+            color: white;
+            border-color: var(--slipknot-red);
+            box-shadow: 0 0 15px rgba(139,0,0,0.5);
+        }
+
+        /* Immersive View for Capsules */
+        .immersive-view {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 90px;
+            background: linear-gradient(180deg, var(--lyric-bg) 0%, #000000 100%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.3, 0, 0, 1);
+        }
+        .immersive-view.active { transform: translateY(0); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139,0,0,0.5); }
+
+        /* Progress Bar */
+        .progress-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; cursor: pointer; position: relative; }
+        .progress-fill { height: 100%; background: var(--spotify-text-highlight); border-radius: 2px; width: 0%; transition: width 0.1s linear; }
+        .progress-bar:hover .progress-fill { background: var(--spotify-green); }
+        .progress-bar:hover .progress-fill::after {
+            content: ''; position: absolute; right: -5px; top: -4px; width: 12px; height: 12px;
+            background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- MAIN CONTAINER -->
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="mb-8 px-3 text-white flex items-center gap-2">
+                <div class="w-8 h-8 bg-spotify-green rounded-full flex items-center justify-center text-black font-black italic text-lg shadow-[0_0_15px_rgba(29,185,84,0.5)]">W</div>
+                <span class="text-2xl font-black tracking-tighter">WOLFFY</span>
+            </div>
+            <ul class="space-y-2">
+                <li class="nav-item active"><i class="fa-solid fa-house text-xl w-6"></i> Home</li>
+                <li class="nav-item"><i class="fa-solid fa-magnifying-glass text-xl w-6"></i> Search</li>
+                <li class="nav-item"><i class="fa-solid fa-book-open text-xl w-6"></i> Your Library</li>
+            </ul>
+            <div class="mt-8 pt-6 border-t border-gray-800">
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 px-3">Study Playlists</p>
+                <ul class="space-y-3 px-3 text-sm font-semibold">
+                    <li class="hover:text-white cursor-pointer transition text-gray-500">A1 - Lady Gaga & Bruno Mars</li>
+                    <li class="hover:text-white cursor-pointer transition text-gray-500">B1 - Iron Maiden (Wasted Years)</li>
+                    <li class="hover:text-white cursor-pointer transition text-gray-500">B2 - Linkin Park (In the End)</li>
+                    <li class="text-white cursor-pointer transition">B2 - Slipknot (Dead Memories)</li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- MAIN AREA -->
+        <main class="main-view shadow-2xl" id="main-dashboard">
+            <!-- Header Album Cover Style -->
+            <div class="p-8 pt-16 flex flex-col md:flex-row items-end gap-6 bg-gradient-to-t from-black/90 to-transparent">
+                <div class="w-48 h-48 md:w-60 md:h-60 shadow-[0_15px_40px_rgba(139,0,0,0.3)] flex-shrink-0 group relative overflow-hidden bg-zinc-950 rounded-xl border border-red-900/30">
+                    <!-- Dark Metal Image -->
+                    <div class="w-full h-full flex flex-col items-center justify-center text-center p-4 bg-[url('https://images.unsplash.com/photo-1598387181032-a3103a2db5b3?auto=format&fit=crop&w=600&q=80')] bg-cover bg-blend-overlay bg-black/70 group-hover:bg-black/40 transition-all duration-700">
+                        <span class="text-[10px] font-bold text-red-500 tracking-[0.3em] mb-2 uppercase drop-shadow-md">WOLFFY B2</span>
+                        <h2 class="text-3xl font-black text-white italic tracking-tighter shadow-black drop-shadow-lg leading-tight">DEAD<br><span class="text-red-600">MEMORIES</span></h2>
+                        <span class="text-gray-400 font-bold text-[10px] mt-4 uppercase tracking-widest"></span>
+                    </div>
+                    <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fa-solid fa-play text-5xl text-slipknot-red"></i>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2 pb-2">
+                    <span class="text-sm font-bold tracking-widest uppercase text-white"><i class="fa-solid fa-fire text-slipknot-red mr-1"></i> Interactive Capsules • B2</span>
+                    <h1 class="text-5xl md:text-7xl font-black tracking-tighter text-white mb-2 leading-none drop-shadow-lg">Dead Memories</h1>
+                    <div class="flex items-center gap-3 text-sm font-bold flex-wrap">
+                        <div class="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-600"><i class="fa-solid fa-music text-[10px] text-gray-300"></i></div>
+                        <span class="text-white hover:underline cursor-pointer">Slipknot</span>
+                        <span class="text-gray-400">• Theme: Regret & Choices</span>
+                        <span class="text-slipknot-red font-bold">• Focus: Mixed Conditionals</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-8 mt-6">
+                <p class="text-lg md:text-xl text-gray-300 leading-relaxed font-medium max-w-4xl shadow-black drop-shadow-lg border-l-4 border-slipknot-red pl-4">
+                    Dive into the emotional intensity of Slipknot. Explore how past choices shape our current reality. 
+                    Master <span class="text-white font-bold italic">Mixed Conditionals (Type 3 + 2)</span> to articulate regrets and alternate realities in this advanced B2 module.
+                </p>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="px-8 py-6 flex items-center gap-6 mt-2">
+                <div class="play-btn-large" onclick="startMasterclass()">
+                    <i class="fa-solid fa-play ml-1"></i>
+                </div>
+                <i class="fa-regular fa-heart text-3xl text-slipknot-red cursor-pointer transition hover:scale-110"></i>
+                <i class="fa-solid fa-ellipsis text-2xl text-gray-400 hover:text-white cursor-pointer transition"></i>
+            </div>
+
+            <!-- MINIMALIST CAPSULE GRID -->
+            <div class="px-8 pb-20 pt-4">
+                <h3 class="text-white font-bold text-xl mb-6 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-skull text-zinc-500"></i> Advanced Capsules
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="capsules-container">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- IMMERSIVE CAPSULE VIEW -->
+        <div class="immersive-view" id="exercise-view">
+            <header class="p-6 flex justify-between items-center bg-transparent z-10 border-b border-white/5">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-black/40 rounded-xl flex items-center justify-center shadow-lg border border-red-900/30 backdrop-blur-sm" id="ex-icon-container">
+                        <i class="fa-solid fa-music text-slipknot-red text-xl" id="ex-header-icon"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-bold tracking-widest text-slipknot-red mb-0.5" id="ex-subtitle">MODULE TYPE</p>
+                        <h2 class="text-xl font-bold text-white tracking-tight" id="ex-title">Capsule Title</h2>
+                    </div>
+                </div>
+                <button onclick="closeExercise()" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white transition backdrop-blur-md">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </header>
+
+            <!-- pb-32 ensures content ends safely above the floating bar -->
+            <div class="flex-grow flex flex-col p-8 pb-32 overflow-y-auto relative" id="exercise-content">
+                <!-- Content Injected via JS -->
+            </div>
+
+            <!-- Floating Feedback Bar -->
+            <div id="feedback-bar" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] max-w-xl py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 flex items-center justify-center px-6 transition-all duration-400 ease-out border-2 opacity-0 translate-y-12 pointer-events-none backdrop-blur-xl">
+                <!-- Feedback Injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM PLAYER -->
+    <div class="player-bar">
+        <div class="flex items-center gap-4 w-1/3">
+            <div class="w-14 h-14 bg-zinc-900 rounded shadow flex items-center justify-center text-gray-500 overflow-hidden border border-zinc-700">
+                <img src="https://images.unsplash.com/photo-1598387181032-a3103a2db5b3?auto=format&fit=crop&w=100&q=80" class="w-full h-full object-cover opacity-80" alt="Cover">
+            </div>
+            <div class="flex flex-col">
+                <span class="text-sm font-bold text-white hover:underline cursor-pointer">Dead Memories (B2)</span>
+                <span class="text-xs text-gray-400 hover:underline cursor-pointer">Slipknot</span>
+            </div>
+            <i class="fa-solid fa-heart text-spotify-green cursor-pointer ml-4"></i>
+        </div>
+
+        <div class="flex flex-col items-center justify-center w-1/3 gap-2">
+            <div class="flex items-center gap-6 text-gray-400">
+                <i class="fa-solid fa-shuffle hover:text-white cursor-pointer transition"></i>
+                <i class="fa-solid fa-backward-step hover:text-white cursor-pointer transition text-xl"></i>
+                <div class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center cursor-pointer hover:scale-105 transition shadow-[0_0_10px_rgba(255,255,255,0.3)]" onclick="toggleGlobalPlay()">
+                    <i class="fa-solid fa-play ml-0.5" id="global-play-icon"></i>
+                </div>
+                <i class="fa-solid fa-forward-step hover:text-white cursor-pointer transition text-xl"></i>
+                <i class="fa-solid fa-repeat text-spotify-green cursor-pointer transition"></i>
+            </div>
+            <div class="flex items-center gap-2 w-full max-w-md text-xs text-gray-400 font-mono">
+                <span id="player-time-current">0:00</span>
+                <div class="progress-bar group">
+                    <div class="progress-fill group-hover:bg-slipknot-red" id="player-progress"></div>
+                </div>
+                <span>4:28</span>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 w-1/3 text-gray-400">
+            <i class="fa-solid fa-microphone text-slipknot-red cursor-pointer transition" title="Capsule Mode Active"></i>
+            <i class="fa-solid fa-list-ul hover:text-white cursor-pointer transition"></i>
+            <i class="fa-solid fa-volume-high hover:text-white cursor-pointer transition"></i>
+            <div class="w-24 h-1 bg-gray-600 rounded-full cursor-pointer"><div class="w-1/2 h-full bg-white rounded-full hover:bg-slipknot-red"></div></div>
+        </div>
+    </div>
+
+    <!-- B2 CAPSULES LOGIC (SLIPKNOT) -->
+    <script>
+        // B2 Minimalist Capsules configuration for Slipknot - Dead Memories
+        const modules = [
+            {
+                id: 'cap-1', 
+                title: 'Song Context', 
+                desc: 'Listen to the chorus and fill in the metaphorical gaps.', 
+                tag: 'Spotify Lyrics', 
+                icon: 'fa-headphones', 
+                type: 'lyrics',
+                lines: [
+                    { text: "Dead ____ in my heart", active: true, target: "memories" }, 
+                    { text: "Dead ____ in your name", active: true, target: "visions" }, 
+                    { text: "Dead ____ in my brain", active: true, target: "options" }
+                ],
+                options: ["memories", "dreams", "visions", "options"]
+            },
+            {
+                id: 'cap-2', 
+                title: 'Grammar Studio', 
+                desc: 'Master Mixed Conditionals (Type 3 + 2): Past action → Present result.', 
+                tag: 'B2 Grammar', 
+                icon: 'fa-link', 
+                type: 'grammar',
+                question: "If I ________ (make) a different choice in the past, my life ________ (be) completely different today.",
+                options: [
+                    { text: "made / will be", correct: false },
+                    { text: "had made / would be", correct: true },
+                    { text: "have made / would have been", correct: false }
+                ]
+            },
+            {
+                id: 'cap-3', 
+                title: 'Vocabulary Vault', 
+                desc: 'Understand the emotional weight of metaphorical language.', 
+                tag: 'Meaning Lab', 
+                icon: 'fa-brain', 
+                type: 'vocab',
+                question: "What does the phrase <strong>'Dead Memories'</strong> represent in the context of this song?",
+                options: [
+                    { text: "Memories of people who have passed away.", correct: false },
+                    { text: "Things you have completely forgotten.", correct: false },
+                    { text: "Past experiences and regrets that still haunt the present.", correct: true }
+                ]
+            },
+            {
+                id: 'cap-4', 
+                title: 'Alternate Reality', 
+                desc: 'If you could change the past, how would the present be?', 
+                tag: 'Speaking Arena 1', 
+                icon: 'fa-code-merge', 
+                type: 'arena',
+                prompt: "If you could change one past decision, how would your life be different now?",
+                director: "Reflect on a choice using Mixed Conditionals. Connect a past event (If I had...) to your current reality (...I would be).",
+                starters: [
+                    "If I had changed...", 
+                    "My life would be...", 
+                    "I think I would feel..."
+                ]
+            },
+            {
+                id: 'cap-5', 
+                title: 'Impact of the Past', 
+                desc: 'Discuss how our "dead memories" shape who we are.', 
+                tag: 'Speaking Arena 2', 
+                icon: 'fa-fire-flame-curved', 
+                type: 'arena',
+                prompt: "Do you believe our 'dead memories' hold us back, or do they ultimately make us stronger in the present?",
+                director: "Express complex emotional concepts using B2 vocabulary. Discuss the psychological impact of past regrets.",
+                starters: [
+                    "I've realized that...", 
+                    "Today I learned that our past...", 
+                    "These memories actually..."
+                ]
+            }
+        ];
+
+        let currentModuleIndex = 0;
+        let isPlaying = false;
+        let progressInterval;
+        let selectedLyricWord = null;
+        let currentLyricLineIndex = 0;
+
+        function renderCapsules() {
+            const container = document.getElementById('capsules-container');
+            container.innerHTML = modules.map((mod, index) => `
+                <div class="bg-zinc-950/80 backdrop-blur-md hover:bg-zinc-900 border border-zinc-800 hover:border-slipknot-red/50 rounded-2xl p-6 cursor-pointer transition-all duration-300 group flex flex-col h-full shadow-lg hover:shadow-[0_0_20px_rgba(139,0,0,0.2)] relative overflow-hidden" onclick="startModule(${index})">
+                    
+                    <!-- Decorative background glow -->
+                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-red-900/5 rounded-full blur-3xl group-hover:bg-red-900/20 transition-colors"></div>
+
+                    <div class="w-12 h-12 rounded-xl bg-black/50 text-slipknot-red flex items-center justify-center text-xl mb-6 group-hover:scale-110 group-hover:bg-slipknot-red group-hover:text-white transition-all shadow-md border border-red-900/30">
+                        <i class="fa-solid ${mod.icon}"></i>
+                    </div>
+                    
+                    <h3 class="text-white font-black text-xl mb-2 tracking-tight">${mod.title}</h3>
+                    <p class="text-gray-400 text-sm mb-8 flex-grow leading-relaxed">${mod.desc}</p>
+                    
+                    <div class="flex justify-between items-center mt-auto pt-4 border-t border-zinc-800">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-black/60 px-3 py-1.5 rounded border border-zinc-800">${mod.tag}</span>
+                        <div class="w-8 h-8 rounded-full bg-slipknot-red text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-lg">
+                            <i class="fa-solid fa-play ml-0.5 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleGlobalPlay() {
+            const icon = document.getElementById('global-play-icon');
+            const progress = document.getElementById('player-progress');
+            const timeDisplay = document.getElementById('player-time-current');
+            
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                icon.classList.remove('fa-play');
+                icon.classList.add('fa-pause');
+                
+                let width = parseFloat(progress.style.width) || 0;
+                let seconds = 0;
+                
+                progressInterval = setInterval(() => {
+                    width += 0.05;
+                    seconds += 0.15; 
+                    if (width > 100) width = 0;
+                    progress.style.width = width + '%';
+                    
+                    const m = Math.floor(seconds / 60);
+                    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+                    timeDisplay.innerText = `${m}:${s}`;
+                }, 100);
+            } else {
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+                clearInterval(progressInterval);
+            }
+        }
+
+        function startMasterclass() {
+            startModule(0);
+            if(!isPlaying) toggleGlobalPlay();
+        }
+
+        function startModule(index) {
+            currentModuleIndex = index;
+            const module = modules[index];
+            
+            document.getElementById('ex-subtitle').innerText = module.tag;
+            document.getElementById('ex-title').innerText = module.title;
+            document.getElementById('ex-header-icon').className = `fa-solid ${module.icon} text-slipknot-red text-xl`;
+            
+            document.getElementById('exercise-view').classList.add('active');
+            
+            renderQuestion();
+        }
+
+        function closeExercise() {
+            document.getElementById('exercise-view').classList.remove('active');
+            hideFeedback();
+        }
+
+        function renderQuestion() {
+            const module = modules[currentModuleIndex];
+            const content = document.getElementById('exercise-content');
+            content.innerHTML = '';
+            hideFeedback();
+
+            if (module.type === 'lyrics') renderSpotifyLyrics(module);
+            if (module.type === 'vocab' || module.type === 'grammar') renderQuiz(module);
+            if (module.type === 'arena') renderArena(module);
+        }
+
+        // --- CAPSULE 1: SPOTIFY LYRICS ---
+        function renderSpotifyLyrics(module) {
+            selectedLyricWord = null;
+            
+            currentLyricLineIndex = module.lines.findIndex(l => l.active && !l.solved);
+            
+            if (currentLyricLineIndex === -1) {
+                finishModule();
+                return;
+            }
+
+            const activeLine = module.lines[currentLyricLineIndex];
+            const content = document.getElementById('exercise-content');
+            
+            let lyricsHtml = module.lines.map((line, idx) => {
+                if (line.active) {
+                    const parts = line.text.split('____');
+                    if (line.solved) {
+                        return `<div class="lyric-line lyric-inactive my-4">${parts[0]} <span class="text-slipknot-red drop-shadow-md">${line.target}</span> ${parts[1] || ''}</div>`;
+                    } else if (idx === currentLyricLineIndex) {
+                        return `
+                            <div class="lyric-line lyric-active my-4 scale-105 origin-left">
+                                ${parts[0]} <span id="lyric-blank" class="lyric-blank bg-zinc-900/50">...</span> ${parts[1] || ''}
+                            </div>
+                        `;
+                    } else {
+                        return `<div class="lyric-line lyric-inactive my-4 opacity-40">${parts[0]} ____ ${parts[1] || ''}</div>`;
+                    }
+                } else {
+                    return `<div class="lyric-line lyric-inactive my-4 opacity-40">${line.text}</div>`;
+                }
+            }).join('');
+
+            let optionsHtml = module.options.map(opt => `
+                <button onclick="selectLyricOption('${opt}')" class="option-pill" id="opt-${opt}">
+                    ${opt}
+                </button>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto flex flex-col h-full animate-fade-in pt-6">
+                    <p class="text-slipknot-red text-sm font-bold uppercase tracking-widest mb-8"><i class="fa-solid fa-volume-high mr-2"></i> Listen and complete</p>
+                    <div class="flex-grow flex flex-col justify-center">
+                        ${lyricsHtml}
+                    </div>
+                    
+                    <div class="mt-auto pt-10 pb-4 flex flex-col items-center gap-8 bg-gradient-to-t from-[var(--lyric-bg)] to-transparent">
+                        <div class="flex flex-wrap justify-center gap-4">
+                            ${optionsHtml}
+                        </div>
+                        <button id="btn-confirm-lyrics" onclick="confirmLyrics()" disabled class="btn-confirm-glow animate-pulse-red-glow">
+                            <i class="fa-solid fa-skull"></i> Confirm Selection
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectLyricOption(word) {
+            selectedLyricWord = word;
+            const blank = document.getElementById('lyric-blank');
+            blank.innerText = word;
+            blank.classList.add('filled', 'bg-transparent');
+            blank.classList.remove('bg-zinc-900/50');
+            
+            const module = modules[currentModuleIndex];
+            module.options.forEach(opt => {
+                const el = document.getElementById(`opt-${opt}`);
+                if(el) el.classList.remove('selected');
+            });
+            document.getElementById(`opt-${word}`).classList.add('selected');
+            
+            document.getElementById('btn-confirm-lyrics').disabled = false;
+        }
+
+        function confirmLyrics() {
+            const module = modules[currentModuleIndex];
+            const activeLine = module.lines[currentLyricLineIndex];
+            
+            if (selectedLyricWord === activeLine.target) {
+                document.getElementById('lyric-blank').classList.add('bg-success-glow');
+                document.getElementById(`opt-${selectedLyricWord}`).classList.add('bg-success-glow');
+                
+                showFeedback("success", "Correct! The lyric fits perfectly.");
+                
+                activeLine.solved = true;
+                
+                setTimeout(() => {
+                    renderSpotifyLyrics(module); 
+                }, 1500);
+            } else {
+                showFeedback("error", "Incorrect. Listen to the dark context and try again.");
+            }
+        }
+
+        // --- CAPSULES 2 & 3: MINIMALIST QUIZ ---
+        function renderQuiz(module) {
+            let optionsHtml = module.options.map((opt, i) => `
+                <div onclick="selectQuizOption(${i})" class="bg-zinc-900/60 backdrop-blur-sm hover:bg-zinc-800 border border-zinc-700 hover:border-slipknot-red rounded-xl p-6 cursor-pointer transition-all duration-300 group flex items-center justify-between shadow-lg" id="quiz-opt-${i}">
+                    <p class="text-white text-xl font-bold group-hover:text-slipknot-red transition-colors">${opt.text}</p>
+                    <div class="w-6 h-6 rounded-full border-2 border-zinc-600 group-hover:border-slipknot-red flex items-center justify-center">
+                        <div class="w-3 h-3 rounded-full bg-slipknot-red opacity-0 transition-opacity" id="quiz-dot-${i}"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('exercise-content').innerHTML = `
+                <div class="w-full max-w-3xl mx-auto mt-16 animate-fade-in flex flex-col h-full">
+                    <div class="text-center mb-16">
+                        <div class="w-20 h-20 bg-black/60 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg border border-red-900/40">
+                            <i class="fa-solid ${module.icon} text-4xl text-slipknot-red"></i>
+                        </div>
+                        <h3 class="text-3xl md:text-4xl font-black text-white leading-tight">${module.question}</h3>
+                    </div>
+                    
+                    <div class="space-y-4 w-full" id="quiz-options-container">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectQuizOption(index) {
+            const module = modules[currentModuleIndex];
+            const option = module.options[index];
+            const container = document.getElementById('quiz-options-container');
+            
+            container.style.pointerEvents = 'none';
+            
+            const selectedEl = document.getElementById(`quiz-opt-${index}`);
+            const dot = document.getElementById(`quiz-dot-${index}`);
+            
+            dot.style.opacity = '1';
+
+            if (option.correct) {
+                selectedEl.classList.add('bg-success-glow'); // Reusing the spotify-green class for absolute success
+                showFeedback("success", "Excellent! You mastered this B2 concept.");
+                setTimeout(finishModule, 2500);
+            } else {
+                selectedEl.classList.add('bg-error-glow');
+                dot.classList.replace('bg-slipknot-red', 'bg-white');
+                selectedEl.querySelector('.border-2').classList.replace('group-hover:border-slipknot-red', 'border-white');
+                
+                showFeedback("error", "Review the Mixed Conditional structure. Past action → Present result.");
+                
+                setTimeout(() => {
+                    hideFeedback();
+                    container.style.pointerEvents = 'auto';
+                    selectedEl.classList.remove('bg-error-glow');
+                    dot.classList.replace('bg-white', 'bg-slipknot-red');
+                    dot.style.opacity = '0';
+                    selectedEl.querySelector('.border-2').classList.replace('border-white', 'group-hover:border-slipknot-red');
+                }, 3000);
+            }
+        }
+
+        // --- CAPSULES 4 & 5: B2 SPEAKING ARENA ---
+        function renderArena(module) {
+            let startersHtml = module.starters.map(s => `
+                <div class="bg-black/60 border-l-4 border-slipknot-red p-4 rounded-r-lg shadow-[0_4px_15px_rgba(0,0,0,0.5)] hover:bg-black/80 transition-colors">
+                    <p class="text-white font-bold italic text-lg">"${s}"</p>
+                </div>
+            `).join('');
+
+            document.getElementById('exercise-content').innerHTML = `
+                <div class="w-full max-w-6xl mx-auto mt-4 animate-fade-in flex flex-col h-full">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 flex-grow">
+                        <!-- Prompt Side -->
+                        <div class="bg-zinc-950/80 p-8 md:p-10 rounded-2xl border border-red-900/20 relative flex flex-col justify-center shadow-xl backdrop-blur-md">
+                            <div class="absolute -top-4 left-8 bg-zinc-800 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-zinc-600">B2 Discussion Prompt</div>
+                            
+                            <div class="w-20 h-20 bg-black/80 rounded-full flex items-center justify-center mb-8 mx-auto relative border border-red-900/40 shadow-inner">
+                                <i class="fa-solid fa-microphone-lines text-3xl text-slipknot-red animate-pulse"></i>
+                            </div>
+
+                            <p class="text-white text-3xl md:text-4xl font-black italic leading-tight text-center mb-8 tracking-tighter drop-shadow-lg">"${module.prompt}"</p>
+                            
+                            <div class="mt-auto p-5 bg-black/60 border border-zinc-800 rounded-xl">
+                                <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-2"><i class="fa-solid fa-crosshairs text-slipknot-red mr-2"></i> Goal</p>
+                                <p class="text-sm text-gray-300 font-medium leading-relaxed">${module.director}</p>
+                            </div>
+                        </div>
+
+                        <!-- Student Recording Side -->
+                        <div class="flex flex-col justify-center gap-6 transition-all duration-500 bg-black/40 p-8 md:p-10 rounded-2xl border border-zinc-800 backdrop-blur-sm" id="podcast-student-side">
+                            <div class="flex items-center gap-3 mb-2 bg-zinc-900 w-max px-4 py-2 rounded-full border border-zinc-700">
+                                <div class="w-3 h-3 bg-red-600 rounded-full animate-pulse-red-glow shadow-[0_0_10px_rgba(255,0,0,0.8)]"></div>
+                                <p class="text-xs text-gray-300 font-bold uppercase tracking-widest">Speak Out Loud</p>
+                            </div>
+                            
+                            <p class="text-gray-400 text-sm mb-2 leading-relaxed">Use one of these <span class="text-white font-bold border-b border-slipknot-red pb-0.5">Speaking Starters</span> to structure your advanced response.</p>
+                            
+                            <div class="space-y-3 mb-6 flex-grow flex flex-col justify-center">
+                                ${startersHtml}
+                            </div>
+
+                            <button onclick="finishPodcastSpeaking()" class="btn-confirm-glow animate-pulse-red-glow w-full justify-center py-5 text-lg shadow-xl mt-auto">
+                                <i class="fa-solid fa-microphone text-xl"></i> I'm Done Speaking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function finishPodcastSpeaking() {
+            const studentSide = document.getElementById('podcast-student-side');
+            studentSide.classList.add('bg-success-glow');
+            studentSide.classList.remove('bg-black/40', 'border-zinc-800');
+            
+            const btn = studentSide.querySelector('button');
+            btn.innerHTML = `<i class="fa-solid fa-check text-2xl"></i> Recorded!`;
+            btn.classList.remove('bg-slipknot-red', 'animate-pulse-red-glow');
+            btn.classList.add('bg-spotify-green', 'text-black');
+            
+            showFeedback("success", "Brilliant speaking practice! High-level emotional depth detected.");
+            setTimeout(finishModule, 3000);
+        }
+
+        // --- CAPSULE COMPLETION ---
+        function finishModule() {
+            document.getElementById('exercise-content').innerHTML = `
+                <div class="text-center animate-fade-in flex flex-col items-center justify-center h-full">
+                    <div class="w-28 h-28 bg-spotify-green rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(29,185,84,0.6)]">
+                        <i class="fa-solid fa-check text-6xl text-black"></i>
+                    </div>
+                    <h2 class="text-4xl md:text-6xl font-black text-white mb-4 tracking-tighter">Capsule Complete</h2>
+                    <p class="text-lg text-gray-400 mb-12 max-w-md mx-auto">You've successfully mastered this intense B2 module.</p>
+                    <button onclick="closeExercise()" class="btn-confirm-glow shadow-xl px-12 py-5" style="background-color: var(--spotify-green); color: black;">
+                        Back to Modules <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            `;
+            hideFeedback();
+            
+            modules[currentModuleIndex].completed = true;
+        }
+
+        // --- FLOATING FEEDBACK SYSTEM ---
+        function showFeedback(type, message) {
+            const bar = document.getElementById('feedback-bar');
+            
+            let bgClass = "bg-spotify-green text-black border-spotify-green";
+            let icon = "fa-circle-check";
+            
+            if (type === "error") { bgClass = "bg-red-700 text-white border-red-600"; icon = "fa-skull"; }
+            if (type === "warning") { bgClass = "bg-yellow-600 text-white border-yellow-500"; icon = "fa-circle-info"; }
+            
+            // Apply new classes and trigger animation
+            bar.className = `absolute bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] max-w-xl py-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 flex items-center justify-center px-8 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) border-2 opacity-100 translate-y-0 ${bgClass}`;
+            
+            bar.innerHTML = `
+                <div class="w-full flex items-center justify-start gap-5">
+                    <i class="fa-solid ${icon} text-3xl drop-shadow-md"></i>
+                    <h4 class="text-lg font-bold tracking-wide">${message}</h4>
+                </div>
+            `;
+        }
+
+        function hideFeedback() {
+            const bar = document.getElementById('feedback-bar');
+            
+            // Revert back
+            bar.classList.remove('opacity-100', 'translate-y-0');
+            bar.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+        }
+
+        window.onload = () => { renderCapsules(); };
+    </script>
+</body>
+</html>
